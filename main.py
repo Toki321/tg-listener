@@ -1,10 +1,10 @@
+from collections import Counter
 import os
+import re
 import time
 from telethon import TelegramClient
 import logging
 from telethon.tl.functions.messages import GetHistoryRequest
-from collections import Counter
-import re
 
 logging.basicConfig(format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s',
                     level=logging.WARNING)
@@ -16,7 +16,7 @@ load_dotenv()
 api_id = os.environ.get('API_ID')
 api_hash = os.environ.get('API_HASH')
 phone_number = os.environ.get('PHONE_NUMBER')
-group_chat = os.environ.get('GROUP_CHAT')
+group_name = os.environ.get('GROUP_NAME')
 
 client = TelegramClient('anon', api_id, api_hash)
 client.start(phone_number)
@@ -38,8 +38,9 @@ async def get_tickers_from_last_30_minutes(group_name):
     half_an_hour_ago = now - 30 * 60
     messages = await client(GetHistoryRequest(
         peer=target_group.entity,
-        limit=None,
-        offset_date=int(half_an_hour_ago),
+        limit=1000,
+        offset_date=None,
+        offset_id=0,
         max_id=0,
         min_id=0,
         add_offset=0,
@@ -58,4 +59,5 @@ async def get_tickers_from_last_30_minutes(group_name):
     for ticker, count in ticker_counts.items():
         print(f'{ticker}: {count} times')
 
-client.loop.run_until_complete(get_tickers_from_last_30_minutes(group_chat))
+
+client.loop.run_until_complete(get_tickers_from_last_30_minutes(group_name))
