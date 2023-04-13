@@ -1,7 +1,10 @@
 import os
+import time
 from telethon import TelegramClient
 import logging
 from telethon.tl.functions.messages import GetHistoryRequest
+from collections import Counter
+import re
 
 logging.basicConfig(format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s',
                     level=logging.WARNING)
@@ -13,11 +16,12 @@ load_dotenv()
 api_id = os.environ.get('API_ID')
 api_hash = os.environ.get('API_HASH')
 phone_number = os.environ.get('PHONE_NUMBER')
+group_chat = os.environ.get('GROUP_CHAT')
 
 client = TelegramClient('anon', api_id, api_hash)
 client.start(phone_number)
 
-async def get_last_10_messages_from_group(group_name):
+async def get_tickers_from_last_30_minutes(group_name):
     groups = await client.get_dialogs()
     target_group = None
 
@@ -30,21 +34,28 @@ async def get_last_10_messages_from_group(group_name):
         print(f'No group found with the name "{group_name}".')
         return
 
+    now = time.time()
+    half_an_hour_ago = now - 30 * 60
     messages = await client(GetHistoryRequest(
         peer=target_group.entity,
-        limit=10,
-        offset_id=0,
-        offset_date=None,
+        limit=None,
+        offset_date=int(half_an_hour_ago),
         max_id=0,
         min_id=0,
         add_offset=0,
         hash=0
     ))
-    for message in messages.messages[::-1]:
-        sender = await client.get_entity(message.sender_id)
-        print(f"{sender.username or sender.first_name}: {message.message}")
 
+    ticker_pattern = re.compile(r'/i\s+([a-zA-Z]+)')
+    tickers = []
 
+    for message in messages.messages:
+        if message.date.timestamp() > half_an_hour_ago:
+            matches = re.findall(ticker_pattern, message.message)
+            tickers.extend(matches)
 
-client.loop.run_until_complete(get_last_10_messages_from_group('arcadia - Trading Pit TG Scrape'))
+    ticker_counts = Counter(tickers)
+    for ticker, count in ticker_counts.items():
+        print(f'{ticker}: {count} times')
 
+client.loop.run_until_complete(get_tickers_from_last_30_minutes(group_chat))
