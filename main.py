@@ -5,6 +5,7 @@ import time
 from telethon import TelegramClient
 import logging
 from telethon.tl.functions.messages import GetHistoryRequest
+import asyncio
 
 logging.basicConfig(format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s',
                     level=logging.WARNING)
@@ -21,7 +22,7 @@ group_name = os.environ.get('GROUP_NAME')
 client = TelegramClient('anon', api_id, api_hash)
 client.start(phone_number)
 
-async def get_tickers_from_last_30_minutes(group_name):
+async def get_tickers_from_last_interval(group_name):
     groups = await client.get_dialogs()
     target_group = None
 
@@ -60,4 +61,13 @@ async def get_tickers_from_last_30_minutes(group_name):
         print(f'{ticker}: {count} times')
 
 
-client.loop.run_until_complete(get_tickers_from_last_30_minutes(group_name))
+async def main():
+    while True:
+        await get_tickers_from_last_interval(group_name)
+        print("Waiting 60 seconds before running again.")
+        await asyncio.sleep(60)  
+
+client.loop.run_until_complete(get_tickers_from_last_interval(group_name))
+
+# -970114179
+# 6193333968:AAHiRXlfMeSfGpmoKhhwezQ9dDPjXsEQiuY
