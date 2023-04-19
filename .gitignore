@@ -1,2 +1,5 @@
 venv
 .env
+name.session
+session_name.session
+__pycache__

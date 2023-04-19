@@ -21,7 +21,7 @@ phone_number = os.environ.get('PHONE_NUMBER')
 group_name = os.environ.get('GROUP_NAME')
 bot_token = os.environ.get('BOT_TOKEN')
 chat_id = os.environ.get('CHAT_ID')
-interval_time = os.environ.get('') # in seconds
+interval_time = int(os.environ.get('INTERVAL_TIME')) 
 
 client = TelegramClient('anon', api_id, api_hash)
 client.start(phone_number)
@@ -41,7 +41,7 @@ async def get_tickers_from_last_interval(group_name):
         return
 
     now = time.time()
-    half_an_hour_ago = now - interval_time
+    half_an_hour_ago = int(now - interval_time)
     messages = await client(GetHistoryRequest(
         peer=target_group.entity,
         limit=1000,
